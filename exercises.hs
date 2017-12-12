@@ -1,8 +1,5 @@
 import Data.Char
-import Data.Function
 import Data.List
-import Data.Bits
-import Data.Maybe
 
 --ex1
 subtotal :: Num a => [a] -> [a]
@@ -27,34 +24,29 @@ meetsOffer (c:s) x 	| c=='A' = meetsOffer s (x-48)
 
 --ex4
 data TypeOfSort = Ascending | NonDescending | Constant | NonAscending | Descending | NotSorted 
-	deriving (Show, Eq)
+	deriving Show
 
 sortType :: (Ord a)=> [a] -> TypeOfSort
 sortType [] = NotSorted
 sortType [x] = NotSorted
-sortType (x:y:[]) 	| x==y 		= Constant
-					| x>y  		= Descending
-					| otherwise	= Ascending
+sortType xs	| isA xs	=Ascending
+			| isC xs	=Constant
+			| isND xs	=NonDescending
+			| isD xs	=Descending
+			| isNA xs	=NonAscending
+			| otherwise =NotSorted
+	where
+		isA [x] = True
+		isA (x:y:xs) = x<y && isA (y:xs)
+		isC [x] = True
+		isC (x:y:xs) = x==y && isC (y:xs)
+		isND [x] = True
+		isND (x:y:xs) = x<=y && isND (y:xs)
+		isD [x] = True
+		isD (x:y:xs) = x>y && isD (y:xs)
+		isNA [x] = True
+		isNA (x:y:xs) = x>=y && isNA (y:xs)
 
-sortType (x:y:xs) 	| sortType (y:xs)==NotSorted	= NotSorted
-
-					| sortType (y:xs)==Descending && x==y 	= NonAscending
-					| sortType (y:xs)==Descending && x>y  	= Descending
-					| sortType (y:xs)==Descending && x<y	= NotSorted
-
-					| sortType (y:xs)==NonAscending && (x==y || x>y)	= NonAscending
-					| sortType (y:xs)==NonAscending && x<y				= NotSorted
-
-					| sortType (y:xs)==Constant && x==y 	= Constant
-					| sortType (y:xs)==Constant && x>y 		= NonAscending
-					| sortType (y:xs)==Constant && x<y		= NonDescending
-
-					| sortType (y:xs)==NonDescending && (x==y || x<y)	= NonDescending
-					| sortType (y:xs)==NonDescending && x>y  			= NotSorted
-
-					| sortType (y:xs)==Ascending && x==y	= NonDescending
-					| sortType (y:xs)==Ascending && x>y  	= NotSorted
-					| sortType (y:xs)==Ascending && x<y		= Ascending
 
 --ex5
 rpcalc :: String -> Int
@@ -74,7 +66,10 @@ neighbours k p xs = [snd m | m<-take k sorted]
 	where
 		dist c b = sqrt $ (fst c - fst b)^2 + (snd c - snd b)^2
 		tuple = [(dist p m, m) | m<-xs]
-		sorted = sortBy (compare `on` fst) tuple
+		cmp a b | fst a > fst b = GT
+				| fst a == fst b = EQ
+				| otherwise = LT
+		sorted = sortBy (cmp) tuple
 
 --ex7
 data SearchTree = Node SearchTree Int SearchTree | Leaf Int
@@ -119,8 +114,11 @@ encode :: String -> [Int]
 encode "" = []
 encode (x:xs) = addedBit ++ encode xs
 	where
-		enc = [if m==True then 1 else 0 | m<-map (testBit (ord x)) [7,6..0] ]
-		addedBit = enc ++ [if odd $ length (filter (==1) enc) then 1 else 0]
+		enc 1 = [1]
+		enc x = x `mod` 2 : enc (x `div` 2)
+		a = enc $ ord x
+		bin = take (8 - (length a)) (repeat 0) ++ reverse a
+		addedBit = bin ++ [if odd $ length (filter (==1) bin) then 1 else 0]
 
 --ex11
 decode :: [Int] -> String
@@ -141,10 +139,14 @@ makeChange 0 xs = take (length xs) (repeat 0)
 makeChange m xs = if m>0 then choose $ map f xs else take (length xs) (repeat (-1))
 	where
 		choose :: [[Int]] -> [Int]
-		choose xs = minimumBy (compare `on` pozSum) xs
+		choose xs = minimumBy (cmp) xs
+		cmp x y | pozSum x > pozSum y = GT
+				| pozSum x == pozSum y = EQ
+				| otherwise = LT
 		--workaround the no solution case
 		pozSum xs = if sum xs>=0 then sum xs else maxBound :: Int
-		f x = incr (fromMaybe (-1) (elemIndex x xs)) (makeChange (m-x) xs)
+		f x = incr (poz x xs) (makeChange (m-x) xs)
+		poz y (x:xs) = if x==y then 0 else 1+poz y xs
 		--dont increse lists of -1
 		incr n xs = if length xs == length (filter (==(-1)) xs) then xs else
 				take (n) xs ++ [xs!!n+1] ++ drop (n+1) xs 
