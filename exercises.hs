@@ -172,7 +172,6 @@ fnd :: Eq k => k -> Assoc k v -> v
 fnd k t = head [v | (k1,v)<-t , k==k1]
 
 type Subst = Assoc Char Bool
-
 eval :: Subst -> Prop -> Bool
 eval _ (Const b) = b
 eval s (Var x ) = fnd x s
