@@ -8,6 +8,10 @@ occurs a (Node b c d) = if com == EQ then True else
 	where com = compare a c
 
 --ex2
+fldl :: (a -> a -> a) -> a -> Tree a -> a
+fldl f b (Leaf a) = f b a
+fldl f b (Node l a r) = fldl f (f lt a) r
+	where lt = fldl f b l
 
 --ex3
 
@@ -45,3 +49,6 @@ data Pair a b = P (a, b)
 
 instance Functor (Pair a) where
 	fmap f (P (a, b)) = P (a, f b)
+
+fibs :: [Integer]
+fibs = 0 : 1 : zipWith (+) fibs (tail fibs)

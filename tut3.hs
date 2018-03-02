@@ -25,6 +25,7 @@ fac x = [y | y<-[1..x `div` 2], x `mod` y == 0]
 perfect :: Int -> [Int]
 perfect x = [a | a<-[1..x], a == (sum (fac a))]
 
+
 --ex6
 find :: Eq a => a -> [ (a,b)] -> [b]
 find k t = [ v | (k',v) <- t, k==k']

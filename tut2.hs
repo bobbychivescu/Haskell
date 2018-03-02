@@ -3,7 +3,7 @@ import Data.Char
 --ex9
 enc :: Int -> String -> String
 enc i "" = ""
-enc i (x:xs) = [chr ((ord x)+i)] ++ enc i xs 
+enc i (x:xs) = [chr ( (ord x)+i)] ++ enc i xs 
 
 dec :: String -> Int -> (String, (String ->String))
 dec xs i = (enc (-i) xs, enc i)

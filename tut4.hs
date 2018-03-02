@@ -94,7 +94,6 @@ normalise x = if c>=0 then plus c
 
 --ex9
 
-
 --ex10
 data Tree a = Leaf a | Node (Tree a) a (Tree a) | EmptyLeaf
 	deriving Show
