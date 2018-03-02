@@ -112,11 +112,11 @@ sat p = do
 	x <- item
 	if p x then return x else empty
 
-digit :: Parser Char
-digit = sat isDigit
-
 char :: Char -> Parser Char
 char x = sat (==x)
+
+digit :: Parser Char
+digit = sat isDigit
 
 string :: String -> Parser String
 string [] = return []
