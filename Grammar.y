@@ -3,68 +3,65 @@ module Grammar where
 import Tokens 
 }
 
-%name parseCalc 
+%name parseIt 
 %tokentype { Token } 
 %error { parseError }
 %token 
-    let { TokenLet p } 
-    in  { TokenIn p} 
-    true   { TokenTrue p}
-    false   { TokenFalse p}
-    Integer   { TokenInteger p}
-    Bool   { TokenBool p}
-    int { TokenInt $$ p} 
+    ',' { TokenComma p}
+    '&' { TokenAnd p}
+    '.' { TokenDot p}
     var { TokenVar $$ p} 
+    rel { TokenRel $$ p}
     '=' { TokenEq p} 
-    '+' { TokenPlus p} 
-    func { TokenFunc p} 
-    if  { TokenIf p}
-    else { TokenElse p}
-    then { TokenThen p}
     ':' { TokenColon p} 
     '(' { TokenLParen p} 
     ')' { TokenRParen p} 
-    '<' { TokenLt p}
-    '\\' {TokenLambda p}
+    '\\' {TokenExist p}
+    ';'  {TokenSemi p}
 
-%right in 
-%left '+' 
+%right '.'
+%right '&'
 %% 
 
-Exp : let Exp '=' Exp in Exp { Let $2 $4 $6 }
-    | '(' var ':' Type ')'  {Tvar $2 $4} 
-    | Exp '+' Exp            { Plus $1 $3 } 
-    | Exp '<' Exp            { Lt $1 $3 } 
-    | Exp Exp            { App $1 $2 } 
-    | '\\' Exp Exp           { Lam $2 $3} 
-    | '(' Exp ')'            { $2 } 
-    | if Exp then Exp else Exp      { If $2 $4 $6} 
-    | int                    { Int $1 } 
-    | var                    { Var $1 } 
-    | true			 { Tru}
-    | false {Fals}
-    
 
-Type : Integer {Integer}
-     | Bool {Bool}
-     | Type func Type { F $1 $3}
+CSQ : Com CSQ {CS $1 $2}
+    | Com {CE $1 }
+
+Com : Seq ':' Exp ';' {C $1 $3}
+
+Exp : Exp '&' Exp {And $1 $3}
+    | Var '=' Var {Eql $1 $3}
+    | '\\' Var '.' Exp {Lam $2 $4}
+    | rel '(' Seq ')' {Qry $1 $3}
+
+Seq : Var ',' Seq {M $1 $3}
+    | Var {S $1}
+
+Var : var {V $1}
 
 { 
 parseError :: [Token] -> a
+parseError [] = error "Expected ; "
 parseError (x:xs) = error (token_posn x) 
+                     
 
-data Type = Integer | Bool | F Type Type deriving Show
+data CSQ = CS Com CSQ
+         | CE Com
+         deriving Show
 
-data Exp = Let Exp Exp Exp 
-         | Plus Exp Exp 
-         | Lt Exp Exp 
-         | App Exp Exp 
-         | Lam Exp Exp
-         | Tvar String Type 
-         | If Exp Exp Exp
-         | Int Int 
-         | Var String 
-         | Tru 
-         | Fals
+data Com = C Seq Exp 
+         deriving Show
+
+data Exp = And Exp Exp
+         | Eql Var Var
+         | Lam Var Exp
+         | Qry String Seq 
          deriving Show 
+
+data Seq = M Var Seq
+         |S Var 
+         deriving Show
+
+data Var = V String 
+         deriving (Eq, Show)
 } 
